@@ -9,7 +9,8 @@ script: ./scripts/travis.sh
 after_script: if [ "${TRAVIS_MODE}" = "funcTests" ]; then echo -n "travis_fold:start:sauce_logs\nSauce connect log:\n" && cat /home/travis/sauce-connect.log && echo -n "\ntravis_fold:end:sauce_logs\n"; fi
 env:
   global:
-    - SAUCE_USERNAME=mangui
+    - SAUCE_USERNAME=robwalch
+    - secure: qrWlTSEwJOU+CvHSBgJR3gOVP9Tf+zFYHaU5wiMoxetE1EfNPTkvqxQSZcqwEGFo0kXfqk7HvbJq5GvOwwRbkecxdTrNKHKJ6YkD0zlkFhiZIO3p6mWJadD5OPnYvxD5OIEUhDZgtN1pSmOEi1hwC5dEH2q4+tVLS3V7EdzHMSjBYfY9zfPwCsb6eRZCy6Gf+YrS7eiQGG/+hVgr264yx+p038vJIOG76Y++i+RYeP6A5N5U654Xqf7AkEJQZ8ULVcq54rJUAFtP4Jys16I6JiCCR4n3C+eW1eAemTlOfGAddCP+SbgNjfde6jHgXUx5VOXrln12KR/ohVbi7vt0Q+rnpFgs2NpaMI3/5f3NPRlG9jbeeJBhLO3P3swSomdnbfOwgirJN+JhGQ33lsTC72ggGk1G5SmDhnZ2NVipYnSGLLLS4OmauyXQHqsL3okxFLQR0iM1w08RtrpRuvou7bH1a3WsBN9MZf/8oI9hgG2AtdhtKpqVu1z2U9X+TluJwljxtegCZC2t12LU9JbHqcLOsd12s8ApWAZegYpGMx3nguz0gYmiXqBnKf3jye9CWraOcHBavhfD4U7eMR8i3bdIQR3Hs/xLsNSw7+TRRLYJA+vi3q/enPSChf3driViL6KT+dUSABbBncZk4iNhJXUwrmKUhZns6xTscEU2DNI=
 stages:
   - buildAndTest
   - releaseAlpha
@@ -70,7 +71,4 @@ jobs:
     - stage: testFuncOptional
       env:   TRAVIS_MODE=funcTests UA=safari              OS="OS X 10.12" UA_VERSION="10.1"
 addons:
-  sauce_connect:
-    tunnel_domains: localhost
-  jwt:
-    secure: TxJT041jqRf4raCwtNJRb0rz2gGvEaADZjWO41UQND2+YIZ//S9qB2C4YyrL1BBsn8/ebdHr0cd18PwCzoBSEmoCdoAWXmqBaaLvM1DOeQkKJbU3+pFmWtv1qGqRXJLEAysNvzhG0sLdvBc0M7a/CWxqRfx1O3lGhLnTlAW33LlQndjJ8vh3SGQm8HxFR1503ujPd7V1jGwduVwaQp4zbAKTnQ4MLugmJf6UKiTc+YILMrVWOwipOIyYHh2GqbChd/v1PXff26XCNJXcaRZKJ8JosWyBpq5t4zlPO0qDfHpqbEuYK44xm4vzbZS94P/KF8BYzdtxQYLrxoS1UlnUYU7RmzqgL3y3AM7nzX/cXvJcoNXfUK2BpsB754XNyQfRmXOdRiHoC8+wwPqGkH/KCrmS4UIOqv4THfmDbrtewfcDTgKOzHxGcT1IsUq9BTxMNtxSwpHTHUXTXrzpS/UBDvrlc+9qPTqf+e6QL1aG+JT5sOg5REm2hMy0j18/Kr+HLXkehxEgJ6JrybyHUkkJrfcuWgVDu7Lv3cxlrtSMXi7TIwSB75NMoM8AE71GEVjXwpOw/0giwnmGsJNNi01ztod0UFe2V2rS+yPI1WNZIJ7Fw66U0oOKJ1rb4Iksl86n5Y2snHsxK8q5jhKaAaiWgGK5kVTAgF89t/GXYyNH6cI=
+  sauce_connect: true
