@@ -22,7 +22,7 @@ const browserConfig = {
  */
 let browser;
 let stream;
-let printDebugLogs = false;
+let printDebugLogs = true;
 
 // Setup browser config data from env vars
 if (onTravis) {
@@ -58,11 +58,16 @@ if (browserConfig.platform) {
 let hostname = onTravis ? 'localhost' : '127.0.0.1';
 
 // Launch static server
-HttpServer.createServer({
+const httpServer = HttpServer.createServer({
   showDir: false,
   autoIndex: false,
-  root: './'
-}).listen(8000, hostname);
+  root: './',
+  logFn: (req, res, err) => {
+    console.log('HTTP-server', req, res, err);
+  }
+});
+
+httpServer.listen(8000, hostname);
 
 const stringifyResult = (result) => JSON.stringify(result, Object.keys(result).filter(k => k !== 'logs'), 2);
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -321,8 +326,7 @@ describe(`testing hls.js playback in the browser on "${browserDescription}"`, fu
     try {
       await retry(async function () {
         console.log('Retrieving web driver session...');
-        const [timeouts, session] = await Promise.all([
-          browser.manage().setTimeouts({ script: 75000 }),
+        const [session] = await Promise.all([
           browser.getSession()
         ]);
         console.log(`Retrieved session in ${Date.now() - start}ms`);
@@ -338,36 +342,31 @@ describe(`testing hls.js playback in the browser on "${browserDescription}"`, fu
   });
 
   beforeEach(async function () {
+    if (printDebugLogs) {
+      console.log(`Loading test page http://${hostname}:8000/tests/functional/auto/index.html`);
+    }
     try {
-      await retry(async () => {
-        if (printDebugLogs) {
-          console.log('Loading test page...');
-        }
-        try {
-          await browser.get(`http://${hostname}:8000/tests/functional/auto/index.html`);
-        } catch (e) {
-          throw new Error('failed to open test page');
-        }
-        if (printDebugLogs) {
-          console.log('Test page loaded.');
-        }
-        try {
-          await browser.wait(
-            until.elementLocated(By.css('body#hlsjs-functional-tests')),
-            5000,
-            'Failed to load test page, source of other page below.'
-          );
-        } catch (e) {
-          const source = await browser.getPageSource();
-          console.log(source);
-          throw e;
-        }
-        if (printDebugLogs) {
-          console.log('Test harness found, page confirmed loaded');
-        }
-      });
+      await browser.get(`http://${hostname}:8000/tests/functional/auto/index.html`);
     } catch (e) {
-      throw new Error(`error getting test page loaded: ${e}`);
+      console.log('failed to open test page');
+      throw e;
+    }
+    if (printDebugLogs) {
+      console.log('Test page loaded.');
+    }
+    try {
+      await browser.wait(
+        until.elementLocated(By.css('body#hlsjs-functional-tests')),
+        5000,
+        'Failed to load test page, source of other page below.'
+      );
+    } catch (e) {
+      const source = await browser.getPageSource();
+      console.log(source);
+      throw e;
+    }
+    if (printDebugLogs) {
+      console.log('Test harness found, page confirmed loaded');
     }
   });
 
@@ -382,6 +381,7 @@ describe(`testing hls.js playback in the browser on "${browserDescription}"`, fu
     console.log('Quitting browser...');
     await browser.quit();
     console.log('Browser quit.');
+    httpServer.close();
   });
 
   for (let name in streams) {
