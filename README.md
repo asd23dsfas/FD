@@ -64,9 +64,10 @@ HLS.js is written in [ECMAScript6] (`*.js`) and [TypeScript] (`*.ts`) (strongly 
   - All internal events can be monitored (Network Events, Video Events)
   - Playback session metrics are also exposed
 - Resilience to errors
-  - Retry mechanism embedded in the library
+  - Retry, adaptive, and penalty box mechanisms embedded in the library
   - Recovery actions can be triggered fix fatal media or network errors
 - [Redundant/Failover Playlists](https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/StreamingMediaGuide/UsingHTTPLiveStreaming/UsingHTTPLiveStreaming.html#//apple_ref/doc/uid/TP40008332-CH102-SW22)
+- HLS Content Steering
 - HLS Variable Substitution
 
 ### Supported HLS tags
@@ -123,17 +124,15 @@ Parsed but missing feature support
 
 ### Not Supported
 
-For a complete list of issues, see ["Top priorities" in the Release Planning and Backlog project tab](https://github.com/video-dev/hls.js/projects/6). Codec support is dependent on the runtime environment (for example, not all browsers on the same OS support HEVC).
+Codec support is dependent on the runtime environment (for example, not all browsers on the same OS support HEVC).
 
 - Advanced variant selection based on runtime media capabilities (See issues labeled [`media-capabilities`](https://github.com/video-dev/hls.js/labels/media-capabilities))
-- HLS Content Steering
 - HLS Interstitials
 - `#EXT-X-GAP` filling [#2940](https://github.com/video-dev/hls.js/issues/2940)
 - `#EXT-X-I-FRAME-STREAM-INF` I-frame Media Playlist files
 - `SAMPLE-AES` with fmp4, aac, mp3, vtt... segments (MPEG-2 TS only)
 - FairPlay, PlayReady, Widevine DRM with MPEG-2 TS segments
 - FairPlay legacy keys (For com.apple.fps.1_0 use native Safari playback)
-- Advanced variant selection based on runtime media capabilities (See issues labeled [`media-capabilities`](https://github.com/video-dev/hls.js/labels/media-capabilities))
 - MP3 elementary stream audio in IE and Edge (<=18) on Windows 10 (See [#1641](https://github.com/video-dev/hls.js/issues/1641) and [Microsoft answers forum](https://answers.microsoft.com/en-us/ie/forum/all/ie11-on-windows-10-cannot-play-hls-with-mp3/2da994b5-8dec-4ae9-9201-7d138ede49d9))
 
 ### Server-side-rendering (SSR) and `require` from a Node.js runtime
