@@ -144,6 +144,7 @@ class SubtitleTrackController extends BasePlaylistController {
     this.groupId = null;
     this.tracksInGroup = [];
     this.trackId = -1;
+    this.queuedDefaultTrack = -1;
     this.selectDefaultTrack = true;
   }
 
@@ -266,7 +267,9 @@ class SubtitleTrackController extends BasePlaylistController {
   }
 
   set subtitleTrack(newId: number) {
-    this.selectDefaultTrack = false;
+    if (newId !== -1) {
+      this.selectDefaultTrack = false;
+    }
     const lastTrack = this.tracksInGroup
       ? this.tracksInGroup[this.trackId]
       : undefined;
