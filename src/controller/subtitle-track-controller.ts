@@ -308,7 +308,7 @@ class SubtitleTrackController extends BasePlaylistController {
    * A value of -1 will disable all subtitle tracks.
    */
   private toggleTrackModes(newId: number): void {
-    const { media, trackId } = this;
+    const { media } = this;
     if (!media) {
       return;
     }
@@ -317,19 +317,26 @@ class SubtitleTrackController extends BasePlaylistController {
     const groupTracks = textTracks.filter(
       (track) => (track as any).groupId === this.groupId
     );
-    if (newId === -1) {
-      [].slice.call(textTracks).forEach((track) => {
-        track.mode = 'disabled';
-      });
-    } else {
-      const oldTrack = groupTracks[trackId];
-      if (oldTrack) {
-        oldTrack.mode = 'disabled';
-      }
-    }
+    [].slice.call(textTracks).forEach((track) => {
+      track.mode = 'disabled';
+    });
 
-    const nextTrack = groupTracks[newId];
+    let nextTrack = groupTracks[newId];
     if (nextTrack) {
+      const mediaOptionTrack = this.tracks[newId];
+      if (
+        nextTrack.label !== mediaOptionTrack.name ||
+        nextTrack.language !== mediaOptionTrack.lang
+      ) {
+        nextTrack = groupTracks.filter(
+          (track) =>
+            (track as any).label === mediaOptionTrack.name &&
+            track.language === mediaOptionTrack.lang
+        )[0];
+        if (!nextTrack) {
+          return;
+        }
+      }
       nextTrack.mode = this.subtitleDisplay ? 'showing' : 'hidden';
     }
   }
@@ -416,8 +423,16 @@ class SubtitleTrackController extends BasePlaylistController {
       }
     }
 
-    // Setting current subtitleTrack will invoke code.
-    if (this.subtitleTrack !== trackId) {
+    const lastTrack = this.tracksInGroup
+      ? this.tracksInGroup[this.trackId]
+      : undefined;
+    const textTrack = tracks[trackId];
+    if (
+      !lastTrack ||
+      (textTrack.label !== lastTrack.name &&
+        textTrack.language !== lastTrack.lang)
+    ) {
+      // Setting current subtitleTrack will invoke code
       this.subtitleTrack = trackId;
     }
   }
