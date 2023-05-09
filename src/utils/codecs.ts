@@ -76,8 +76,6 @@ const sampleEntryCodesISO = {
   },
 };
 
-const MediaSource = getMediaSource();
-
 export type CodecType = 'audio' | 'video';
 
 export function isCodecType(codec: string, type: CodecType): boolean {
@@ -95,6 +93,7 @@ export function areCodecsMediaSourceSupported(
 }
 
 function isCodecMediaSourceSupported(codec: string, type: CodecType): boolean {
+  const MediaSource = getMediaSource();
   return (
     MediaSource?.isTypeSupported(`${type || 'video'}/mp4;codecs="${codec}"`) ??
     false

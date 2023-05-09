@@ -22,8 +22,6 @@ import type { PlaylistLevelType } from '../types/loader';
 import type { TypeSupported } from './tsdemuxer';
 import type { RationalTimestamp } from '../utils/timescale-conversion';
 
-const MediaSource = getMediaSource() || { isTypeSupported: () => false };
-
 export default class TransmuxerInterface {
   public error: Error | null = null;
   private hls: Hls;
@@ -66,6 +64,7 @@ export default class TransmuxerInterface {
     this.observer.on(Events.FRAG_DECRYPTED, forwardMessage);
     this.observer.on(Events.ERROR, forwardMessage);
 
+    const MediaSource = getMediaSource() || { isTypeSupported: () => false };
     const typeSupported: TypeSupported = {
       mp4: MediaSource.isTypeSupported('video/mp4'),
       mpeg: MediaSource.isTypeSupported('audio/mpeg'),

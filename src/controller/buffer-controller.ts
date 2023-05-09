@@ -13,6 +13,7 @@ import {
   SourceBufferName,
   SourceBufferListeners,
 } from '../types/buffer';
+import CapLevelController from './cap-level-controller';
 import type {
   LevelUpdatedData,
   BufferAppendingData,
@@ -29,7 +30,6 @@ import type { ChunkMetadata } from '../types/transmuxer';
 import type Hls from '../hls';
 import type { LevelDetails } from '../loader/level-details';
 
-const MediaSource = getMediaSource();
 const VIDEO_CODEC_PROFILE_REPLACE =
   /(avc[1234]|hvc1|hev1|dvh[1e]|vp09|av01)(?:\.[^.,]+)+/;
 
@@ -163,12 +163,15 @@ export default class BufferController implements ComponentAPI {
     data: MediaAttachingData
   ) {
     const media = (this.media = data.media);
+    const MediaSource = getMediaSource();
     if (media && MediaSource) {
       const ms = (this.mediaSource = new MediaSource());
       // MediaSource listeners are arrow functions with a lexical scope, and do not need to be bound
       ms.addEventListener('sourceopen', this._onMediaSourceOpen);
       ms.addEventListener('sourceended', this._onMediaSourceEnded);
       ms.addEventListener('sourceclose', this._onMediaSourceClose);
+      ms.addEventListener('startstreaming', this._onStartStreaming);
+      ms.addEventListener('endstreaming', this._onEndStreaming);
       // link video and media Source
       media.src = self.URL.createObjectURL(ms);
       // cache the locally generated object url
@@ -176,6 +179,34 @@ export default class BufferController implements ComponentAPI {
       media.addEventListener('emptied', this._onMediaEmptied);
     }
   }
+  private _onEndStreaming = (event) => {
+    this.hls.pauseBuffering();
+  };
+  private _onStartStreaming = (event) => {
+    const { hls, mediaSource } = this;
+    if (!hls || !mediaSource) {
+      return;
+    }
+    if ('quality' in mediaSource) {
+      if (mediaSource.quality === 'low') {
+        hls.autoLevelCapping = CapLevelController.getMaxLevelByMediaSize(
+          hls.levels,
+          1280,
+          720
+        );
+      } else if (mediaSource.quality === 'medium') {
+        hls.autoLevelCapping = CapLevelController.getMaxLevelByMediaSize(
+          hls.levels,
+          1920,
+          1080
+        );
+      } else {
+        // do not cap max quality
+        hls.autoLevelCapping = -1;
+      }
+    }
+    hls.resumeBuffering();
+  };
 
   protected onMediaDetaching() {
     const { media, mediaSource, _objectUrl } = this;
@@ -199,6 +230,8 @@ export default class BufferController implements ComponentAPI {
       mediaSource.removeEventListener('sourceopen', this._onMediaSourceOpen);
       mediaSource.removeEventListener('sourceended', this._onMediaSourceEnded);
       mediaSource.removeEventListener('sourceclose', this._onMediaSourceClose);
+      mediaSource.removeEventListener('startstreaming', this._onStartStreaming);
+      mediaSource.removeEventListener('endstreaming', this._onEndStreaming);
 
       // Detach properly the MediaSource from the HTMLMediaElement as
       // suggested in https://github.com/w3c/media-source/issues/53.
@@ -764,6 +797,13 @@ export default class BufferController implements ComponentAPI {
           this.addBufferListener(sbName, 'updatestart', this._onSBUpdateStart);
           this.addBufferListener(sbName, 'updateend', this._onSBUpdateEnd);
           this.addBufferListener(sbName, 'error', this._onSBUpdateError);
+          // ManagedSourceBuffer bufferedchange event
+          this.addBufferListener(sbName, 'bufferedchange', (event) => {
+            this.hls.trigger(Events.BUFFER_FLUSHED, {
+              type: trackName as SourceBufferName,
+            });
+          });
+
           this.tracks[trackName] = {
             buffer: sb,
             codec: codec,
@@ -793,7 +833,10 @@ export default class BufferController implements ComponentAPI {
     if (media) {
       media.removeEventListener('emptied', this._onMediaEmptied);
       this.updateMediaElementDuration();
-      this.hls.trigger(Events.MEDIA_ATTACHED, { media });
+      this.hls.trigger(Events.MEDIA_ATTACHED, {
+        media,
+        mediaSource: mediaSource as MediaSource,
+      });
     }
 
     if (mediaSource) {
