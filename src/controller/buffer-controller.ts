@@ -172,6 +172,10 @@ export default class BufferController implements ComponentAPI {
       ms.addEventListener('sourceclose', this._onMediaSourceClose);
       ms.addEventListener('startstreaming', this._onStartStreaming);
       ms.addEventListener('endstreaming', this._onEndStreaming);
+
+      // Disable AirPlay for ManagedMediaSource to work
+      media.disableRemotePlayback = true;
+
       // link video and media Source
       media.src = self.URL.createObjectURL(ms);
       // cache the locally generated object url
